@@ -1,0 +1,14 @@
+body {
+	background-color: black;
+}
+#main{
+	position: absolute;
+	min-width: 25%;
+	left: 40%;
+	color: rgba(0,0,0,0);
+	text-shadow: -10px -10px 4px yellow;
+	
+	top: 50vh;
+	font-family: 'Londrina Shadow', cursive;
+	font-size: 10vh;
+}
