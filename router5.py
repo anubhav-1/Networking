@@ -47,13 +47,13 @@ def certi_check(senderIP):
 
 
 
-myIp='192.168.10.121'
+myIp='192.168.10.125'
 my_certificate=get_certi(myIp)
 
 
 s= socket.socket()
 s_host=socket.gethostbyname(socket.gethostname())
-s_port= 12371
+s_port= 12375
 s.bind((s_host, s_port))
 
 
@@ -89,7 +89,8 @@ while True:
         out['certificate']=str(my_certificate)
         out['ipPath'].append(myIp)
         pack.append(str(out))
-
+        msg = 'success'
+        c.send(msg.encode())
 
     if abs(int(x)-int(y)) == 1:
         s.close()
@@ -99,7 +100,7 @@ while True:
 for item in pack:
     k = socket.socket()
     k_host = socket.gethostbyname(socket.gethostname())
-    k_port = 12372
+    k_port = 12376
     k.connect((k_host, k_port))
     k.send(str(item).encode())
     print("Sent: "+str(item))

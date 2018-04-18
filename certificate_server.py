@@ -12,15 +12,16 @@ def issue():
     s.listen(10)
     while True:
         c, addr = s.accept()
-        print("Got ISSUE request from: " + str(addr))
+        senderIP= c.recv(1024).decode('ascii')
+        print("Got ISSUE request from: " + str(senderIP))
 
 
 
         obtain = ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))
-        print("Issued Certificate ID: " + str(obtain) + " to: " + str(addr[0]))
+        print("Issued Certificate ID: " + str(obtain) + " to: " + str(senderIP))
 
-        with open("Certificate_records.txt", "a") as file:
-            a = [str(addr[0]), obtain]
+        with open("Certificate_records.txt", "a+") as file:
+            a = [senderIP, obtain]
             file.write(", ".join(a))
             file.write("\n")
             file.close()

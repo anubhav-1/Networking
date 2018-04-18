@@ -10,7 +10,7 @@ class Packet(object):
     """docstring for Packet"""
 
     def __init__(self, senderIP, senderMAC, receiverIP, nameOfInfo, packetNumber, numberOfPackets, payload,
-                 certificate):
+                 certificate,ipPath):
         self.senderIP = senderIP
         self.senderMAC = senderMAC
         self.receiverIP = receiverIP
@@ -19,17 +19,19 @@ class Packet(object):
         self.numberOfPackets = numberOfPackets
         self.payload = payload
         self.certificate = certificate
+        self.ipPath = ipPath
 
 def num(message):
     return math.ceil(len(message)/10)
 
 
-def getCerti():
+def getCerti(senderIP):
     s=socket.socket()
     # ip of Certificate Server
     host=socket.gethostbyname(socket.gethostname())
     port=12345
     s.connect((host,port))
+    s.send(senderIP.encode())
     t=str(s.recv(1024).decode('ascii'))
     print("Fetched Certificate: "+str(t))
     s.close()
@@ -37,8 +39,9 @@ def getCerti():
 
 
 def setValues():
-    global senderIP, senderMAC, receiverIP, nameOfInfo, payload, numberOfPackets, certificate
-    senderIP = socket.gethostbyname(socket.gethostname())
+    global senderIP, senderMAC, receiverIP, nameOfInfo, payload, numberOfPackets, certificate, ipPath
+    ipPath=[]
+    senderIP = '192.168.10.120'
     senderMAC = get_mac()
     receiverIP = input("Enter the receiver IP: ")
 
@@ -50,7 +53,8 @@ def setValues():
     numberOfPackets = num(payload)
 
     nameOfInfo=payload_file.split('/')[-1]
-    certificate = getCerti()
+    certificate = getCerti(senderIP)
+    ipPath.append(senderIP)
 
 
 def sendData():
@@ -60,7 +64,7 @@ def sendData():
     for i in range(numberOfPackets):
         pack.append(
             Packet(senderIP, senderMAC, receiverIP, nameOfInfo, i, numberOfPackets, payload[counter:counter + 10],
-                   certificate))
+                   certificate,ipPath))
         counter = counter + 10
 
 
@@ -69,7 +73,7 @@ def sendData():
     print("Transmitting Data...")
 
     c = 1
-    file = open(filename, "a")
+    file = open(filename, "a+")
     file.write("Record\n")
     for item in pack:
         k = socket.socket()
@@ -97,6 +101,9 @@ def sendData():
         com_packet["payload"] = str(item.payload)
         file.write(str(item.certificate) + "\n")
         com_packet["certificate"] = str(item.certificate)
+
+        file.write(str(item.ipPath) + "\n")
+        com_packet["ipPath"] = item.ipPath
 
         print(len(str(com_packet)))
         print(com_packet)

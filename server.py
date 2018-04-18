@@ -6,7 +6,7 @@ import difflib
 
 certi='abc'
 
-def certi_check():
+def certi_check(immediate_senderIP):
     global certi
     m='a'
 
@@ -17,7 +17,7 @@ def certi_check():
     k.connect((k_host, k_port))
 
     try:
-        k.send(addr[0].encode())
+        k.send(immediate_senderIP.encode())
 
     except NameError:
         print("Waiting....")
@@ -40,7 +40,7 @@ def receive_data():
     #receiving info
     s= socket.socket()
     s_host=socket.gethostbyname(socket.gethostname())
-    s_port= 12373
+    s_port= 12376
     s.bind((s_host, s_port))
     #filename = "received.py"
 
@@ -48,17 +48,20 @@ def receive_data():
 
     while True:
         c, addr = s.accept()
-        print("Got connection from: " + str(addr))
+
         pack = eval(c.recv(1024).decode())
         info=str(pack['payload'])
         temp =str(pack['certificate'])
         filename=str(pack['nameOfInfo'])
+        patharray=pack['ipPath']
+        immediate_senderIP=str(patharray[-1])
+        print("Got connection from: " + str(immediate_senderIP))
         print(info)
         print(temp)
         print(filename)
         if certi=='abc':
             try:
-                _thread.start_new_thread(certi_check, ())
+                certi_check(immediate_senderIP)
                 time.sleep(1)
 
             except:
