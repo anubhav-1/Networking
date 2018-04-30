@@ -5,6 +5,33 @@ import difflib
 
 
 certi='abc'
+private_key=None
+public_key=None
+
+def keys():
+    global private_key
+    global public_key
+    global n
+    global e
+    p1 = 53
+    p2 = 59
+    n = p1 * p2
+    phi = (p1 - 1) * (p2 - 1)
+    e=3
+    private_key = int(((2 * phi) + 1) / e)
+    public_key = (n, e)
+
+    print("Private: "+str(private_key)+" Public: "+str(public_key))
+    o=socket.socket()
+    host=socket.gethostbyname(socket.gethostname())
+    port=12388
+    o.connect((host,port))
+    o.send(str(['192.168.10.127',public_key]).encode())
+    print("Keys sent")
+    o.recv(1024)
+    o.close()
+
+
 
 def certi_check(immediate_senderIP):
     global certi
@@ -51,14 +78,24 @@ def receive_data():
 
         pack = eval(c.recv(1024).decode())
         info=str(pack['payload'])
+        info_arry=eval(info)
         temp =str(pack['certificate'])
         filename=str(pack['nameOfInfo'])
+
+
         patharray=pack['ipPath']
         immediate_senderIP=str(patharray[-1])
         print("Got connection from: " + str(immediate_senderIP))
-        print(info)
+        print(info_arry)
         print(temp)
         print(filename)
+        print("Public Key is: "+ str(public_key))
+
+
+        again=''
+        for i in info_arry:
+            i=int((int(i)**private_key)%n)
+            again=again+chr(int(i))
         if certi=='abc':
             try:
                 certi_check(immediate_senderIP)
@@ -72,7 +109,7 @@ def receive_data():
         if certi == temp:
             file = open(filename, "a+")
             data= info
-            file.write(data)
+            file.write(again)
             print("written")
             file.close()
             msg = 'success'
@@ -86,6 +123,7 @@ def receive_data():
 
 try:
     _thread.start_new_thread(receive_data, ())
+    _thread.start_new_thread(keys, ())
     #_thread.start_new_thread(certi_check, ())
 
 except:

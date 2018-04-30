@@ -1,6 +1,7 @@
 from uuid import getnode as get_mac
 import math
 import socket
+import random
 import time
 from tkinter.filedialog import askopenfilename
 from tkinter import *
@@ -20,6 +21,17 @@ class Packet(object):
         self.payload = payload
         self.certificate = certificate
         self.ipPath = ipPath
+
+
+def get_keys(senderIP):
+    global dest_public_key
+    o=socket.socket()
+    host=socket.gethostbyname(socket.gethostname())
+    port=12389
+    o.connect((host,port))
+    o.send(str(senderIP).encode())
+    dest_public_key= eval(o.recv(1024).decode('ascii'))
+
 
 def num(message):
     return math.ceil(len(message)/10)
@@ -44,11 +56,34 @@ def setValues():
     senderIP = '192.168.10.120'
     senderMAC = get_mac()
     receiverIP = input("Enter the receiver IP: ")
+    # Calculate public Key
+    p1 = 53
+    p2 = 59
+    n = p1 * p2
+    phi = (p1 - 1) * (p2 - 1)
+    e=3
+    private_key = int(((2 * phi) + 1) / e)
+    public_key = (n, e)
+    get_keys(receiverIP)
+
+    n1=dest_public_key[0]
+    e1 = dest_public_key[1]
 
     Tk().withdraw()  # we don't want a full GUI, so keep the root window from appearing
     payload_file = askopenfilename()  # show an "Open" dialog box and return the path to the selected file
 
     payload = open(payload_file, "r+").read()
+    msg=''
+    for alpha in payload:
+        temp = ord(alpha)
+        print("temp old: "+str(temp))
+        temp=(temp**e1)%n1
+        msg=msg+str(temp)+str(' ')
+        print(alpha+' -> '+ str(temp)+' -> '+str(msg))
+
+    msg=msg.split(' ')
+    msg.pop()
+    payload=msg
 
     numberOfPackets = num(payload)
 
@@ -58,6 +93,8 @@ def setValues():
 
 
 def sendData():
+
+
     pack = []
     counter = 0
     filename = "records.txt"
@@ -104,6 +141,8 @@ def sendData():
 
         file.write(str(item.ipPath) + "\n")
         com_packet["ipPath"] = item.ipPath
+
+
 
         print(len(str(com_packet)))
         print(com_packet)
